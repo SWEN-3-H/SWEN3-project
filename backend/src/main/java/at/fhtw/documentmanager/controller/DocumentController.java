@@ -3,7 +3,7 @@ package at.fhtw.documentmanager.controller;
 import at.fhtw.documentmanager.dto.DocumentRequestDto;
 import at.fhtw.documentmanager.dto.DocumentResponseDto;
 import at.fhtw.documentmanager.mapper.DocumentMapper;
-import at.fhtw.documentmanager.service.DocumentService;
+import at.fhtw.documentManager.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
