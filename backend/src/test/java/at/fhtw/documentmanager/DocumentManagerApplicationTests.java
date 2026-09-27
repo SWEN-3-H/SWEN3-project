@@ -1,4 +1,4 @@
-package at.fhtw.documentManager;
+package at.fhtw.documentmanager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

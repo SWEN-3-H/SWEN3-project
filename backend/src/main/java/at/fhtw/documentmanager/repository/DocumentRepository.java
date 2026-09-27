@@ -1,0 +1,9 @@
+package at.fhtw.documentmanager.repository;
+
+import at.fhtw.documentmanager.model.Document;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface DocumentRepository extends JpaRepository<Document, Long> {
+}
