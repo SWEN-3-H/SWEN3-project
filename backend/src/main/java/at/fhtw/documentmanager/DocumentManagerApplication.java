@@ -1,4 +1,4 @@
-package at.fhtw.documentManager;
+package at.fhtw.documentmanager;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
