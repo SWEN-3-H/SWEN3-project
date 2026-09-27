@@ -27,7 +27,7 @@ public class DocumentService {
 
     public Document findById(Long id) {
         return documentRepository.findById(id)
-                .orElseThrow(() -> new DocumentNotFoundException(id));
+                .orElseThrow(() -> new ResourceNotFoundException("Document", id));
     }
 
     public Document updateFilename(Long id, String newFilename) {
@@ -38,7 +38,7 @@ public class DocumentService {
 
     public void delete(Long id) {
         if (!documentRepository.existsById(id)) {
-            throw new DocumentNotFoundException(id);
+            throw new ResourceNotFoundException("Document", id);
         }
         documentRepository.deleteById(id);
     }

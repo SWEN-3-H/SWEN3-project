@@ -14,6 +14,9 @@ public class LabelService {
     private final LabelRepository labelRepository;
 
     public Label create(String name) {
+        if (labelRepository.findByName(name).isPresent()) {
+            throw new DuplicateLabelException(name);
+        }
         Label label = new Label();
         label.setName(name);
         return labelRepository.save(label);
@@ -24,6 +27,9 @@ public class LabelService {
     }
 
     public void delete(Long id) {
+        if (!labelRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Label", id);
+        }
         labelRepository.deleteById(id);
     }
 }
