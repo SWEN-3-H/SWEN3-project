@@ -1,8 +1,7 @@
-package at.fhtw.documentManager.service;
+package at.fhtw.documentmanager.service;
 
 import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.repository.DocumentRepository;
-import at.fhtw.documentmanager.service.DocumentNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
