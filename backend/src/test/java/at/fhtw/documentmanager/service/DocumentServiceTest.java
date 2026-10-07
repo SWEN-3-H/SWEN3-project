@@ -1,18 +1,15 @@
-package at.fhtw.documentManager.service;
+package at.fhtw.documentmanager.service;
 
 import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.repository.DocumentRepository;
-import at.fhtw.documentManager.service.DocumentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,7 +57,7 @@ class DocumentServiceTest {
         when(documentRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> documentService.findById(1L))
-                .isInstanceOf(at.fhtw.documentmanager.service.DocumentNotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
 
     }
 
@@ -103,7 +100,7 @@ class DocumentServiceTest {
         when(documentRepository.existsById(5L)).thenReturn(false);
 
         assertThatThrownBy(() -> documentService.delete(5L))
-                .isInstanceOf(at.fhtw.documentmanager.service.DocumentNotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
 
         verify(documentRepository, never()).deleteById(5L);
     }
