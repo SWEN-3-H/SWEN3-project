@@ -1,0 +1,9 @@
+.Title{
+  font-size: xx-large;
+  font-weight: bold;
+}
+
+.top{
+  display: flex;
+  justify-content: space-between;
+}
