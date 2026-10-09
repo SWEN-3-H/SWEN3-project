@@ -1,0 +1,7 @@
+.upload-zone{
+  border-style: dashed !important;
+  cursor: pointer;
+}
+.upload-zone:hover{
+  border-color: blue !important;
+}

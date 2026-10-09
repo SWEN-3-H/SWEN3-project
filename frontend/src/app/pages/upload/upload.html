@@ -1,1 +1,45 @@
-<p>upload works!</p>
+<div>
+  <h3>Document Upload</h3>
+
+  <div
+    class="upload-zone border border-2 border-dashed rounded p-5 text-center bg-light cursor-pointer"
+    [class.border-primary]="isHovering"
+    [class.bg-white]="isHovering"
+    (dragover)="dragOver($event)"
+    (dragleave)="dragLeave($event)"
+    (drop)="drop($event)">
+
+    <h5>Drag & Drop Files here</h5>
+    <p class="text-muted small">Or click to Open Folder</p>
+
+    <input
+      id="fileInput"
+      type="file"
+      multiple
+      class="d-none"
+      (change)="fileSelected($event)">
+  </div>
+
+  @if (files.length > 0) {
+    <div class="mt-4">
+      <h5>Selected Files</h5>
+      <ul class="list-group">
+        @for (file of files; track file.name; let i = $index) {
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong> {{ file.name }}</strong>
+            </div>
+            <button class="btn btn-outline-danger btn-sm" (click)="removeFile(i)">
+              Löschen
+            </button>
+          </li>
+        }
+      </ul>
+
+      <button class="btn btn-primary mt-3" (click)="upload()">
+        Upload Files
+      </button>
+    </div>
+
+  }
+</div>
