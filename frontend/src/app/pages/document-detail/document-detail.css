@@ -1,0 +1,27 @@
+.header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.header h1 { margin: 0 auto 0 0; }
+
+.rename-field { flex: 1; min-width: 240px; }
+
+mat-card { margin-bottom: 16px; }
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 0;
+}
+
+dl > dt { font-weight: 500; }
+dl > dd { margin: 0; }
+
+.placeholder { color: #757575; }
+.error { color: #b00020; }
+.danger { color: #b00020; }
