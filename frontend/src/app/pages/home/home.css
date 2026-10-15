@@ -1,0 +1,19 @@
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.table {
+  width: 100%;
+}
+
+.error {
+  color: #b00020;
+}

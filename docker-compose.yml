@@ -31,5 +31,16 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
 
+  frontend:
+    build: ./frontend
+    container_name: dm-frontend
+    restart: unless-stopped
+    depends_on:
+      - rest-server
+    ports:
+      - "80:80"
+
 volumes:
   postgres-data:
+
+

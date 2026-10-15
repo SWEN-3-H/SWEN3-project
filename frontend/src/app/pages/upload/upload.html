@@ -1,0 +1,41 @@
+<h2>Upload document</h2>
+
+<label
+  class="upload-zone"
+  [class.hovering]="isHovering()"
+  for="fileInput"
+  (dragover)="dragOver($event)"
+  (dragleave)="dragLeave($event)"
+  (drop)="drop($event)">
+  <mat-icon>cloud_upload</mat-icon>
+  <span class="headline">Drag files here</span>
+  <span class="hint">or click to select files (PDF only, max. 50 MB)</span>
+</label>
+<input id="fileInput" type="file" multiple accept="application/pdf,.pdf"
+       hidden (change)="fileSelected($event)">
+
+@for (msg of rejected(); track msg) {
+  <p class="error">{{ msg }}</p>
+}
+
+@if (items().length > 0) {
+  <mat-list>
+    @for (item of items(); track item.file) {
+      <mat-list-item>
+        <span matListItemTitle>{{ item.file.name }}</span>
+        <span matListItemLine>
+          {{ (item.file.size / 1024 / 1024) | number:'1.0-2' }} MB
+          @switch (item.state) {
+            @case ('uploading') { uploading... }
+            @case ('done')      { done }
+            @case ('error')     { {{ item.message }} }
+          }
+        </span>
+      </mat-list-item>
+    }
+  </mat-list>
+
+  <button mat-flat-button [disabled]="!canUpload()" (click)="upload()">
+    Upload
+  </button>
+}
