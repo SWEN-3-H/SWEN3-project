@@ -2,35 +2,43 @@ package at.fhtw.documentmanager.messaging;
 
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Consumer;
-import com.rabbitmq.client.amqp.Environment;
-import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
-
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
 
+@Slf4j
+@Component
 public class Recv {
-    private static final String QUEUE_NAME = "hello";
 
-    public static void main(String[] argv) throws Exception {
-        Environment environment = new AmqpEnvironmentBuilder()
-                .connectionSettings()
-                .uri("amqp://guest:guest@localhost:5672/%2f")
-                .environmentBuilder()
-                .build();
-        Connection connection = environment.connectionBuilder().build();
+    private final Connection connection;
+    private Consumer consumer;
 
-        connection.management().queue(QUEUE_NAME).quorum().queue().declare();
-        System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+    public Recv(Connection connection){
+        this.connection = connection;
+    }
 
-        Consumer consumer = connection.consumerBuilder()
-                .queue(QUEUE_NAME)
+    @PostConstruct
+    void start() {
+        consumer = connection.consumerBuilder().queue(RabbitConfig.Queue_Name)
                 .messageHandler((context, message) -> {
-                    String text = new String(message.body(), StandardCharsets.UTF_8);
-                    System.out.println(" [x] Received '" + text + "'");
-                    context.accept();
-                })
-                .build();
+                    try {
+                        String text = new String(message.body(), StandardCharsets.UTF_8);
+                        log.info("Received message from queue '{}': '{}'",RabbitConfig.Queue_Name, text);
+                        context.accept();
+                    } catch (Exception e){
+                        log.error("Faied to process message from queue '{}'",RabbitConfig.Queue_Name);
+                        context.discard();
+                    }
+                }).build();
+        log.info("Listening on queue '{}'", RabbitConfig.Queue_Name);
+    }
 
-        new CountDownLatch(1).await();
+    @PreDestroy
+    void stop() {
+        if (consumer != null){
+            consumer.close();
+        }
     }
 }
