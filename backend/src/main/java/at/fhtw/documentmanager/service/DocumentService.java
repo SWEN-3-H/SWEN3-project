@@ -4,13 +4,11 @@ import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.model.Label;
 import at.fhtw.documentmanager.repository.DocumentRepository;
 import at.fhtw.documentmanager.repository.LabelRepository;
-import at.fhtw.documentmanager.service.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.DocumentType;
 
 import java.util.List;
 import java.util.Locale;
