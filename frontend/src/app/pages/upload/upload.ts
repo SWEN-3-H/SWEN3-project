@@ -91,7 +91,13 @@ export class Upload {
   }
 
   removeFile(item: UploadItem) {
-    this.items.update(list => list.filter(i => i !== item));
+    if (this.uploading() || item.state === 'done') {
+      return;
+    }
+
+    this.items.update(list =>
+      list.filter(current => current.file !== item.file)
+    );
   }
 
   upload() {
@@ -113,8 +119,18 @@ export class Upload {
     });
   }
 
-  private setState(item: UploadItem, state: UploadState, message?: string) {
-    this.items.update(list => list.map(i => (i === item ? { ...i, state, message } : i)));
+  private setState(
+    item: UploadItem,
+    state: UploadState,
+    message?: string
+  ) {
+    this.items.update(list =>
+      list.map(current =>
+        current.file === item.file
+          ? { ...current, state, message }
+          : current
+      )
+    );
   }
 
   private errorMessage(status: number): string {
