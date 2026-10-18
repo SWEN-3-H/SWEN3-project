@@ -20,6 +20,9 @@ public class Label {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(length = 7)
+    private String color;
+
     @ManyToMany(mappedBy = "labels")
     private Set<Document> documents = new HashSet<>();
 }

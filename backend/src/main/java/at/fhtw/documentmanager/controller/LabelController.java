@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/labels")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class LabelController {
 
     private final LabelService labelService;
@@ -22,7 +23,7 @@ public class LabelController {
 
     @PostMapping
     public ResponseEntity<LabelResponseDto> create(@Valid @RequestBody LabelRequestDto request) {
-        var label = labelService.create(request.name());
+        var label = labelService.create(request.name(), request.color());
         return ResponseEntity.status(HttpStatus.CREATED).body(labelMapper.toDto(label));
     }
 
@@ -31,6 +32,11 @@ public class LabelController {
         return labelService.findAll().stream()
                 .map(labelMapper::toDto)
                 .toList();
+    }
+
+    @PutMapping("/{id}")
+    public LabelResponseDto update(@PathVariable Long id, @Valid @RequestBody LabelRequestDto request) {
+        return labelMapper.toDto(labelService.update(id, request.name(), request.color()));
     }
 
     @DeleteMapping("/{id}")

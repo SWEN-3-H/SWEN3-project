@@ -14,16 +14,16 @@
         <span matListItemTitle>Home</span>
       </a>
 
-      <a mat-list-item routerLink="/documents" routerLinkActive #docs="routerLinkActive"
-         [activated]="docs.isActive">
-        <mat-icon matListItemIcon>description</mat-icon>
-        <span matListItemTitle>Documents</span>
-      </a>
-
       <a mat-list-item routerLink="/upload" routerLinkActive #upload="routerLinkActive"
          [activated]="upload.isActive">
         <mat-icon matListItemIcon>upload</mat-icon>
         <span matListItemTitle>Upload</span>
+      </a>
+
+      <a mat-list-item routerLink="/labels" routerLinkActive #labels="routerLinkActive"
+         [activated]="labels.isActive">
+        <mat-icon matListItemIcon>label</mat-icon>
+        <span matListItemTitle>Labels</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>

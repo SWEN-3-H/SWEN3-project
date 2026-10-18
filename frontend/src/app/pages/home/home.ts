@@ -4,17 +4,17 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DocumentApiService } from '../../services/document-api.service';
 import { DocumentResponse } from '../../models/document.model';
+import {LabelChip} from '../../components/label-chip/label-chip';
 
 @Component({
   selector: 'app-home',
   imports: [
     RouterLink, DatePipe,
     MatButtonModule, MatIconModule, MatTableModule,
-    MatChipsModule, MatProgressSpinnerModule
+    MatProgressSpinnerModule, LabelChip,
   ],
   templateUrl: './home.html',
   styleUrl: './home.css'

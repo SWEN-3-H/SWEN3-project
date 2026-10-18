@@ -22,6 +22,16 @@ dl {
 dl > dt { font-weight: 500; }
 dl > dd { margin: 0; }
 
+.add-label {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.label-list { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.label-item { display: inline-flex; align-items: center; }
+
 .placeholder { color: #757575; }
 .error { color: #b00020; }
 .danger { color: #b00020; }

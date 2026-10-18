@@ -1,0 +1,28 @@
+.create {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.palette { display: flex; gap: 8px; margin: 0 0 16px; }
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch.selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px #212121;
+}
+
+.swatch:focus-visible { outline: 2px solid #212121; outline-offset: 2px; }
+
+.name-field { flex: 1; min-width: 240px; max-width: 400px; }
+.placeholder { color: #757575; }
+.error { color: #b00020; }

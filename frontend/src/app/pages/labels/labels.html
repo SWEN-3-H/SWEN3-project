@@ -1,0 +1,70 @@
+<h1>Labels</h1>
+
+<div class="create">
+  <mat-form-field class="name-field">
+    <mat-label>
+      {{ editing() ? 'Edit label' : 'New label' }}
+    </mat-label>
+    <input matInput [formControl]="nameControl" (keydown.enter)="submit()" maxlength="20">
+    @if (nameControl.hasError('required') || nameControl.hasError('pattern')) {
+      <mat-error>The name must not be empty.</mat-error>
+    } @else if (nameControl.hasError('maxlength')) {
+    <mat-error>Maximum 20 characters.</mat-error>
+  }
+  </mat-form-field>
+  <button mat-flat-button
+          (click)="submit()"
+          [disabled]="saving()">
+    <mat-icon>{{ editing() ? 'save' : 'add' }}</mat-icon>
+    {{ editing() ? 'Save' : 'Add' }}
+  </button>
+
+  @if (editing()) {
+    <button mat-button
+            (click)="cancelEdit()"
+            [disabled]="saving()">
+      Cancel
+    </button>
+  }
+</div>
+<div class="palette" role="radiogroup" aria-label="Label color">
+  @for (c of colors; track c.value) {
+    <button type="button" class="swatch"
+            role="radio"
+            [attr.aria-checked]="selectedColor() === c.value"
+            [attr.aria-label]="c.name"
+            [class.selected]="selectedColor() === c.value"
+            [style.background-color]="c.value"
+            (click)="selectedColor.set(c.value)"></button>
+  }
+</div>
+@if (formError()) {
+  <p class="error">{{ formError() }}</p>
+}
+
+@if (loading()) {
+  <mat-spinner diameter="40" />
+} @else if (loadError()) {
+  <p class="error">{{ loadError() }}</p>
+} @else if (labels().length === 0) {
+  <p class="placeholder">No labels yet. Create the first one above.</p>
+} @else {
+  <mat-list>
+    @for (label of labels(); track label.id) {
+      <mat-list-item>
+        <app-label-chip matListItemTitle [name]="label.name" [color]="label.color" />
+        <button mat-icon-button matListItemMeta
+                [disabled]="saving()"
+                [attr.aria-label]="'Edit label ' + label.name"
+                (click)="startEdit(label)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matListItemMeta
+                [attr.aria-label]="'Delete label ' + label.name"
+                (click)="delete(label)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-list-item>
+    }
+  </mat-list>
+}

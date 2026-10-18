@@ -7,12 +7,16 @@ export class LabelApiService {
   private http = inject(HttpClient);
   private baseUrl = '/api/labels';
 
+  create(name: string, color: string | null) {
+    return this.http.post<LabelResponse>(this.baseUrl, { name, color });
+  }
+
   findAll() {
     return this.http.get<LabelResponse[]>(this.baseUrl);
   }
 
-  create(name: string) {
-    return this.http.post<LabelResponse>(this.baseUrl, { name });
+  update(id: number, name: string, color: string | null) {
+    return this.http.put<LabelResponse>(`${this.baseUrl}/${id}`, { name, color });
   }
 
   delete(id: number) {

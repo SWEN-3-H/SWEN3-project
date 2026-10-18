@@ -2,6 +2,7 @@ package at.fhtw.documentmanager.service;
 
 import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.repository.DocumentRepository;
+import at.fhtw.documentmanager.repository.LabelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,11 +25,17 @@ class DocumentServiceTest {
     @Mock
     private DocumentRepository documentRepository;
 
+    @Mock
+    private LabelRepository labelRepository;
+
     private DocumentService documentService;
 
     @BeforeEach
-    void setup(){
-        documentService = new DocumentService(documentRepository);
+    void setup() {
+        documentService = new DocumentService(
+                documentRepository,
+                labelRepository
+        );
     }
 
     @Test
