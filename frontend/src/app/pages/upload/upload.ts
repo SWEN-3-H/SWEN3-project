@@ -69,16 +69,18 @@ export class Upload {
 
     for (const file of Array.from(fileList)) {
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      const duplicate = this.items().some(
-        i => i.file.name === file.name && i.file.size === file.size
+      const duplicate = [...this.items(), ...accepted].some(
+        item =>
+          item.file.name === file.name &&
+          item.file.size === file.size
       );
 
-      if (!isPdf) {
+      if (file.name.length > 255) {
+        errors.push(`${file.name}: filename exceeds 255 characters.`);
+      } else if (!isPdf) {
         errors.push(`${file.name}: only PDF files are allowed.`);
       } else if (file.size > MAX_SIZE) {
         errors.push(`${file.name}: file is larger than 50 MB.`);
-      } else if (file.size === 0) {
-        errors.push(`${file.name}: file is empty.`);
       } else if (duplicate) {
         errors.push(`${file.name}: already in the list.`);
       } else {
@@ -91,7 +93,13 @@ export class Upload {
   }
 
   removeFile(item: UploadItem) {
-    this.items.update(list => list.filter(i => i !== item));
+    if (this.uploading() || item.state === 'done') {
+      return;
+    }
+
+    this.items.update(list =>
+      list.filter(current => current.file !== item.file)
+    );
   }
 
   upload() {
@@ -113,8 +121,18 @@ export class Upload {
     });
   }
 
-  private setState(item: UploadItem, state: UploadState, message?: string) {
-    this.items.update(list => list.map(i => (i === item ? { ...i, state, message } : i)));
+  private setState(
+    item: UploadItem,
+    state: UploadState,
+    message?: string
+  ) {
+    this.items.update(list =>
+      list.map(current =>
+        current.file === item.file
+          ? { ...current, state, message }
+          : current
+      )
+    );
   }
 
   private errorMessage(status: number): string {

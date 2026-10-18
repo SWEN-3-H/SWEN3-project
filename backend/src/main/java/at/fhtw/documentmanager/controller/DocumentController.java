@@ -16,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -49,5 +50,15 @@ public class DocumentController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         documentService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/labels/{labelId}")
+    public DocumentResponseDto addLabel(@PathVariable Long id, @PathVariable Long labelId) {
+        return documentMapper.toDto(documentService.addLabel(id, labelId));
+    }
+
+    @DeleteMapping("/{id}/labels/{labelId}")
+    public DocumentResponseDto removeLabel(@PathVariable Long id, @PathVariable Long labelId) {
+        return documentMapper.toDto(documentService.removeLabel(id, labelId));
     }
 }

@@ -28,4 +28,12 @@ export class DocumentApiService {
   delete(id: number) {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
+
+  addLabel(documentId: number, labelId: number) {
+    return this.http.post<DocumentResponse>(`${this.baseUrl}/${documentId}/labels/${labelId}`, null);
+  }
+
+  removeLabel(documentId: number, labelId: number) {
+    return this.http.delete<DocumentResponse>(`${this.baseUrl}/${documentId}/labels/${labelId}`);
+  }
 }
