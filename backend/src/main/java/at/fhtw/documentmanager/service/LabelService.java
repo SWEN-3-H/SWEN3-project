@@ -47,6 +47,7 @@ public class LabelService {
 
         label.setName(name);
         label.setColor(color);
+        log.info("Label updated: id={}", id);
         return label;
     }
 

@@ -56,11 +56,8 @@ public class DocumentService {
     }
 
     public void delete(Long id) {
-        if (!documentRepository.existsById(id)) {
-            log.warn("Document with id={} not found", id);
-            throw new ResourceNotFoundException("Document", id);
-        }
-        documentRepository.deleteById(id);
+        Document document = findById(id);
+        documentRepository.delete(document);
         log.info("Document with id={} deleted successfully", id);
     }
 
@@ -68,16 +65,23 @@ public class DocumentService {
         String filename = file.getOriginalFilename();
 
         if (filename == null || filename.isBlank()) {
+            log.warn("Upload rejected: filename is missing");
             throw new InvalidDocumentException("Filename must not be blank");
         }
 
         if (filename.length() > 255) {
+            log.warn(
+                    "Upload rejected: filenameLength={}, maximum=255",
+                    filename.length()
+            );
             throw new InvalidDocumentException(
                     "Filename must not exceed 255 characters"
             );
         }
 
         if (!filename.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            log.warn("Upload rejected: filename '{}' does not end with .pdf", filename);
+
             throw new InvalidDocumentException("Only PDF files are allowed");
         }
 
@@ -87,6 +91,10 @@ public class DocumentService {
                 && !contentType.isBlank()
                 && !"application/pdf".equalsIgnoreCase(contentType)
                 && !"application/octet-stream".equalsIgnoreCase(contentType)) {
+            log.warn(
+                    "Upload rejected: unsupported contentType={}",
+                    contentType
+            );
             throw new InvalidDocumentException("Only PDF files are allowed");
         }
     }
@@ -94,18 +102,38 @@ public class DocumentService {
     @Transactional
     public Document addLabel(Long documentId, Long labelId) {
         Document document = findById(documentId);
+
         Label label = labelRepository.findById(labelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Label", labelId));
-        document.getLabels().add(label);
+                .orElseThrow(() -> {
+                    log.warn("Label with id={} not found", labelId);
+                    return new ResourceNotFoundException("Label", labelId);
+                });
+
+        if (document.getLabels().add(label)) {
+            log.info("Label id={} assigned to document id={}", labelId, documentId);
+        } else {
+            log.debug("Label id={} already assigned to document id={}", labelId, documentId);
+        }
+
         return document;
     }
 
     @Transactional
     public Document removeLabel(Long documentId, Long labelId) {
         Document document = findById(documentId);
+
         Label label = labelRepository.findById(labelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Label", labelId));
-        document.getLabels().remove(label);
+                .orElseThrow(() -> {
+                    log.warn("Label with id={} not found", labelId);
+                    return new ResourceNotFoundException("Label", labelId);
+                });
+
+        if (document.getLabels().remove(label)) {
+            log.info("Label id={} removed from document id={}", labelId, documentId);
+        } else {
+            log.debug("Label id={} was not assigned to document id={}", labelId, documentId);
+        }
+
         return document;
     }
 }

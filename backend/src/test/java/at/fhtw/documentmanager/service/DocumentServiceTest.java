@@ -95,21 +95,60 @@ class DocumentServiceTest {
 
     @Test
     void deleteDocument() {
-        when(documentRepository.existsById(1L)).thenReturn(true);
+        Document document = documentWithId(1L, "test.pdf");
+        when(documentRepository.findById(1L))
+                .thenReturn(Optional.of(document));
 
         documentService.delete(1L);
 
-        verify(documentRepository).deleteById(1L);
+        verify(documentRepository).delete(document);
     }
 
     @Test
     void deleteDocumentFail() {
-        when(documentRepository.existsById(5L)).thenReturn(false);
+        when(documentRepository.findById(5L))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> documentService.delete(5L))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verify(documentRepository, never()).deleteById(5L);
+        verify(documentRepository, never()).delete(any(Document.class));
+    }
+
+    @Test
+    void uploadWithWrongExtensionFails() {
+        MultipartFile file = new MockMultipartFile(
+                "file", "test.txt", "application/pdf", "content".getBytes());
+
+        assertThatThrownBy(() -> documentService.upload(file))
+                .isInstanceOf(InvalidDocumentException.class);
+
+        verifyNoInteractions(documentRepository);
+    }
+
+    @Test
+    void uploadWithTooLongFilenameFails() {
+        String filename = "a".repeat(252) + ".pdf";
+
+        MultipartFile file = new MockMultipartFile(
+                "file", filename, "application/pdf", "content".getBytes());
+
+        assertThatThrownBy(() -> documentService.upload(file))
+                .isInstanceOf(InvalidDocumentException.class);
+
+        verifyNoInteractions(documentRepository);
+    }
+
+    @Test
+    void updateMissingDocumentFails() {
+        when(documentRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                () -> documentService.updateFilename(99L, "new.pdf")
+        ).isInstanceOf(ResourceNotFoundException.class);
+
+        verify(documentRepository, never()).save(any(Document.class));
     }
 
 
