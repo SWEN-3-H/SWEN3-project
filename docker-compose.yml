@@ -24,12 +24,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/%2f
 
   frontend:
     build: ./frontend
@@ -39,6 +42,19 @@ services:
       - rest-server
     ports:
       - "80:80"
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: dm-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics","-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:
