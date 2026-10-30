@@ -1,5 +1,6 @@
 package at.fhtw.documentmanager.service;
 
+import at.fhtw.documentmanager.messaging.OcrMessageProducer;
 import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.repository.DocumentRepository;
 import at.fhtw.documentmanager.repository.LabelRepository;
@@ -28,13 +29,17 @@ class DocumentServiceTest {
     @Mock
     private LabelRepository labelRepository;
 
+    @Mock
+    private OcrMessageProducer ocrMessageProducer;
+
     private DocumentService documentService;
 
     @BeforeEach
     void setup() {
         documentService = new DocumentService(
                 documentRepository,
-                labelRepository
+                labelRepository,
+                ocrMessageProducer
         );
     }
 
