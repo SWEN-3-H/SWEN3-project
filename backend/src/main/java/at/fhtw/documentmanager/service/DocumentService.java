@@ -1,5 +1,7 @@
 package at.fhtw.documentmanager.service;
 
+import at.fhtw.documentmanager.messaging.DocumentUploadedMessage;
+import at.fhtw.documentmanager.messaging.OcrMessageProducer;
 import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.model.Label;
 import at.fhtw.documentmanager.repository.DocumentRepository;
@@ -20,6 +22,7 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final LabelRepository labelRepository;
+    private final OcrMessageProducer ocrMessageProducer;
 
     public Document upload(MultipartFile file) {
         validateUpload(file);
@@ -28,6 +31,7 @@ public class DocumentService {
         Document document = new Document();
         document.setFilename(file.getOriginalFilename());
         Document saved = documentRepository.save(document);
+        ocrMessageProducer.sendDocumentUploaded(new DocumentUploadedMessage(saved.getId(), saved.getFilename()));
         log.info("Document with id={} saved successfully", saved.getId());
         return saved;
     }

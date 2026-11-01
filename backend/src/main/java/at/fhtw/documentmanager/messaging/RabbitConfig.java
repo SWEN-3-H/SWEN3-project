@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
 
     public static final String Queue_Name = "hello";
+    public static final String OCR_QUEUE = "document.ocr";
 
     @Bean(destroyMethod = "close")
     public Environment aEnviornment(@Value("${app.rabbitmq.uri}") String uri) {
@@ -23,7 +24,8 @@ public class RabbitConfig {
     public Connection aConnection(Environment aEnviornment ) {
         Connection connection = aEnviornment.connectionBuilder().build();
         connection.management().queue(Queue_Name).quorum().queue().declare();
-        log.info("Connected to RabbitMQ, queue '{} declared", Queue_Name);
+        connection.management().queue(OCR_QUEUE).quorum().queue().declare();
+        log.info("Connected to RabbitMQ, queue '{} declared, queue '{} declared", Queue_Name, OCR_QUEUE);
         return connection;
     }
 }
