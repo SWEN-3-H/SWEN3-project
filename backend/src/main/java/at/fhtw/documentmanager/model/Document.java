@@ -22,6 +22,9 @@ public class Document {
     @Column(nullable = false)
     private String filename;
 
+    @Column(name = "object_key", unique = true)
+    private String objectKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

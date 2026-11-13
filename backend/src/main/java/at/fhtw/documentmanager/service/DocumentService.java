@@ -6,6 +6,8 @@ import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.model.Label;
 import at.fhtw.documentmanager.repository.DocumentRepository;
 import at.fhtw.documentmanager.repository.LabelRepository;
+import at.fhtw.documentmanager.storage.DocumentStorageService;
+import at.fhtw.documentmanager.storage.StorageException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +25,57 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final LabelRepository labelRepository;
     private final OcrMessageProducer ocrMessageProducer;
+    private final DocumentStorageService documentStorageService;
 
     public Document upload(MultipartFile file) {
         validateUpload(file);
-        log.info("Uploading document: filename={}, size={} bytes",
-                file.getOriginalFilename(), file.getSize());
+
+        log.info(
+                "Uploading document: filename={}, size={} bytes",
+                file.getOriginalFilename(),
+                file.getSize()
+        );
+
+        String objectKey = documentStorageService.store(file);
+
         Document document = new Document();
         document.setFilename(file.getOriginalFilename());
-        Document saved = documentRepository.save(document);
-        ocrMessageProducer.sendDocumentUploaded(new DocumentUploadedMessage(saved.getId(), saved.getFilename()));
-        log.info("Document with id={} saved successfully", saved.getId());
+        document.setObjectKey(objectKey);
+
+        Document saved;
+
+        try {
+            saved = documentRepository.save(document);
+        } catch (RuntimeException databaseFailure) {
+            try {
+                documentStorageService.delete(objectKey);
+            } catch (StorageException cleanupFailure) {
+                databaseFailure.addSuppressed(cleanupFailure);
+
+                log.error(
+                        "Could not clean up PDF after database failure: objectKey={}",
+                        objectKey,
+                        cleanupFailure
+                );
+            }
+
+            throw databaseFailure;
+        }
+
+        log.info(
+                "Document saved: id={}, objectKey={}",
+                saved.getId(),
+                saved.getObjectKey()
+        );
+
+        ocrMessageProducer.sendDocumentUploaded(
+                new DocumentUploadedMessage(
+                        saved.getId(),
+                        saved.getFilename(),
+                        saved.getObjectKey()
+                )
+        );
+
         return saved;
     }
 
@@ -61,8 +104,15 @@ public class DocumentService {
 
     public void delete(Long id) {
         Document document = findById(id);
+        String objectKey = document.getObjectKey();
+
+        if (objectKey != null && !objectKey.isBlank()) {
+            documentStorageService.delete(objectKey);
+        }
+
         documentRepository.delete(document);
-        log.info("Document with id={} deleted successfully", id);
+
+        log.info("Document deleted: id={}, objectKey={}", id, objectKey);
     }
 
     private void validateUpload(MultipartFile file) {

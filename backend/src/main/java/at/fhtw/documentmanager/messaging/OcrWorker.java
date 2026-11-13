@@ -25,19 +25,25 @@ public class OcrWorker {
         consumer = connection.consumerBuilder().queue(RabbitConfig.OCR_QUEUE).messageHandler((ctx, message) -> {
             try {
                 var msg = objectMapper.readValue(message.body(),DocumentUploadedMessage.class);
-                log.info("OCR worker received document {} ({}). OCR not implemented yet", msg.documentId(), msg.fileName());
+                log.info(
+                        "OCR job received: documentId={}, fileName={}, objectKey={}. "
+                                + "OCR not implemented yet",
+                        msg.documentId(),
+                        msg.fileName(),
+                        msg.objectKey()
+                );
                 ctx.accept();
             } catch (Exception e){
                 log.error("OCR Worker failed to process message", e);
                 ctx.discard();
             }
         }).build();
-        log.info("OCR eorker listening on queue {}", RabbitConfig.OCR_QUEUE);
+        log.info("OCR worker listening on queue {}", RabbitConfig.OCR_QUEUE);
     }
 
     @PreDestroy
     void stop(){
-        if(consumer != null){
+        if (consumer != null){
             consumer.close();
         }
     }
