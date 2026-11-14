@@ -1,5 +1,6 @@
 package at.fhtw.ocrworker.messaging;
 
+import at.fhtw.ocrworker.ocr.OcrService;
 import at.fhtw.ocrworker.storage.DocumentDownloadService;
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Consumer;
@@ -25,6 +26,7 @@ public class OcrConsumer {
     private final ObjectMapper objectMapper;
     private final DocumentDownloadService downloadService;
     private final Publisher failedJobPublisher;
+    private final OcrService ocrService;
 
     private Consumer consumer;
 
@@ -32,12 +34,14 @@ public class OcrConsumer {
             Connection connection,
             ObjectMapper objectMapper,
             DocumentDownloadService downloadService,
-            Publisher failedJobPublisher) {
+            Publisher failedJobPublisher,
+            OcrService ocrService) {
 
         this.connection = connection;
         this.objectMapper = objectMapper;
         this.downloadService = downloadService;
         this.failedJobPublisher = failedJobPublisher;
+        this.ocrService = ocrService;
     }
 
     @PostConstruct
@@ -84,11 +88,17 @@ public class OcrConsumer {
 
         try {
             log.info(
-                    "PDF downloaded: documentId={}, objectKey={}, size={} bytes. "
-                            + "OCR not implemented yet",
+                    "PDF downloaded: documentId={}, size={} bytes",
                     job.documentId(),
-                    job.objectKey(),
                     Files.size(pdf)
+            );
+
+            String text = ocrService.extractText(pdf);
+
+            log.info(
+                    "OCR job completed: documentId={}, characters={}",
+                    job.documentId(),
+                    text.length()
             );
 
         } finally {
@@ -99,7 +109,6 @@ public class OcrConsumer {
             }
         }
     }
-
     private void forwardFailure(Consumer.Context context, byte[] body) {
         try {
             failedJobPublisher.publish(
