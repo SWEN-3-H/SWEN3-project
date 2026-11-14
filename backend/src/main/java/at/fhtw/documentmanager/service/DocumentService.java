@@ -108,6 +108,7 @@ public class DocumentService {
 
         if (objectKey != null && !objectKey.isBlank()) {
             documentStorageService.delete(objectKey);
+            documentStorageService.delete("ocr-results/" + id + ".txt");
         }
 
         documentRepository.delete(document);

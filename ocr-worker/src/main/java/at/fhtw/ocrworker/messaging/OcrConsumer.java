@@ -2,6 +2,7 @@ package at.fhtw.ocrworker.messaging;
 
 import at.fhtw.ocrworker.ocr.OcrService;
 import at.fhtw.ocrworker.storage.DocumentDownloadService;
+import at.fhtw.ocrworker.storage.OcrResultStorageService;
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Consumer;
 import com.rabbitmq.client.amqp.Publisher;
@@ -27,21 +28,23 @@ public class OcrConsumer {
     private final DocumentDownloadService downloadService;
     private final Publisher failedJobPublisher;
     private final OcrService ocrService;
-
     private Consumer consumer;
+    private final OcrResultStorageService resultStorageService;
 
     public OcrConsumer(
             Connection connection,
             ObjectMapper objectMapper,
             DocumentDownloadService downloadService,
             Publisher failedJobPublisher,
-            OcrService ocrService) {
+            OcrService ocrService,
+            OcrResultStorageService resultStorageService) {
 
         this.connection = connection;
         this.objectMapper = objectMapper;
         this.downloadService = downloadService;
         this.failedJobPublisher = failedJobPublisher;
         this.ocrService = ocrService;
+        this.resultStorageService = resultStorageService;
     }
 
     @PostConstruct
@@ -95,10 +98,16 @@ public class OcrConsumer {
 
             String text = ocrService.extractText(pdf);
 
-            log.info(
-                    "OCR job completed: documentId={}, characters={}",
+            String resultKey = resultStorageService.store(
                     job.documentId(),
-                    text.length()
+                    text
+            );
+
+            log.info(
+                    "OCR job completed: documentId={}, characters={}, resultKey={}",
+                    job.documentId(),
+                    text.length(),
+                    resultKey
             );
 
         } finally {
