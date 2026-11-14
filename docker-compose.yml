@@ -84,6 +84,17 @@ services:
       retries: 12
       start_period: 30s
 
+  ocr-worker:
+    build:
+      context: ./ocr-worker
+    container_name: dm-ocr-worker
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      APP_RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672/%2f
+
 volumes:
   postgres-data:
   minio-data:
