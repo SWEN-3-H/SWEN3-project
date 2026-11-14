@@ -3,6 +3,7 @@ package at.fhtw.ocrworker.messaging;
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Environment;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
+import com.rabbitmq.client.amqp.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,8 @@ public class RabbitConfig {
             LoggerFactory.getLogger(RabbitConfig.class);
 
     public static final String OCR_QUEUE = "document.ocr";
+
+    public static final String OCR_FAILED_QUEUE = "document.ocr.failed";
 
     @Bean(destroyMethod = "close")
     public Environment amqpEnvironment(
@@ -40,12 +43,26 @@ public class RabbitConfig {
                     .quorum()
                     .queue()
                     .declare();
+            log.info("RabbitMQ queue ready: queue={}", OCR_QUEUE);
 
-            log.info("RabbitMQ connected: queue={}", OCR_QUEUE);
+            connection.management()
+                    .queue(OCR_FAILED_QUEUE)
+                    .quorum()
+                    .queue()
+                    .declare();
+
+            log.info("RabbitMQ queue ready: queue={}", OCR_FAILED_QUEUE);
             return connection;
         } catch (RuntimeException e) {
             connection.close();
             throw e;
         }
+    }
+
+    @Bean(destroyMethod = "close")
+    public Publisher failedJobPublisher(Connection connection) {
+        return connection.publisherBuilder()
+                .queue(OCR_FAILED_QUEUE)
+                .build();
     }
 }
