@@ -128,7 +128,6 @@ class DocumentServiceTest {
         Document existing = documentWithId(1L, "test.pdf");
 
         when(documentRepository.save(any(Document.class))).thenAnswer(i -> i.getArgument(0));
-
         when(documentRepository.findById(1L)).thenReturn(Optional.of(existing));
 
         Document result = documentService.updateFilename(1L, "new.pdf");
@@ -192,12 +191,10 @@ class DocumentServiceTest {
 
     @Test
     void updateMissingDocumentFails() {
-        when(documentRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        when(documentRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(
-                () -> documentService.updateFilename(99L, "new.pdf")
-        ).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> documentService.updateFilename(99L, "new.pdf"))
+                .isInstanceOf(ResourceNotFoundException.class);
 
         verify(documentRepository, never()).save(any(Document.class));
     }

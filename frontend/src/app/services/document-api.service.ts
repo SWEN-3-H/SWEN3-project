@@ -36,4 +36,8 @@ export class DocumentApiService {
   removeLabel(documentId: number, labelId: number) {
     return this.http.delete<DocumentResponse>(`${this.baseUrl}/${documentId}/labels/${labelId}`);
   }
+
+  search(q: string) {
+    return this.http.get<DocumentResponse[]>(`${this.baseUrl}/search`, { params: { q } });
+  }
 }
