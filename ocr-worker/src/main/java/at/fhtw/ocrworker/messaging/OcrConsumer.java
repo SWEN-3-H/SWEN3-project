@@ -10,12 +10,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 public class OcrConsumer {
@@ -30,14 +31,16 @@ public class OcrConsumer {
     private final OcrService ocrService;
     private Consumer consumer;
     private final OcrResultStorageService resultStorageService;
+    private final IndexJobProducer indexJobProducer;
 
     public OcrConsumer(
             Connection connection,
             ObjectMapper objectMapper,
             DocumentDownloadService downloadService,
-            Publisher failedJobPublisher,
+            @Qualifier("failedJobPublisher") Publisher failedJobPublisher,
             OcrService ocrService,
-            OcrResultStorageService resultStorageService) {
+            OcrResultStorageService resultStorageService,
+            IndexJobProducer indexJobProducer) {
 
         this.connection = connection;
         this.objectMapper = objectMapper;
@@ -45,6 +48,7 @@ public class OcrConsumer {
         this.failedJobPublisher = failedJobPublisher;
         this.ocrService = ocrService;
         this.resultStorageService = resultStorageService;
+        this.indexJobProducer = indexJobProducer;
     }
 
     @PostConstruct
@@ -69,8 +73,24 @@ public class OcrConsumer {
                             );
                         }
 
-                        process(job);
-                        context.accept();
+                        process(job).whenComplete((unused, failure) -> {
+                            if (failure == null) {
+                                log.info(
+                                        "Indexing job accepted: documentId={}",
+                                        job.documentId()
+                                );
+
+                                context.accept();
+                            } else {
+                                log.error(
+                                        "Could not hand over document {} to indexing",
+                                        job.documentId(),
+                                        failure
+                                );
+
+                                forwardFailure(context, message.body());
+                            }
+                        });
 
                     } catch (Exception e) {
                         log.error(
@@ -86,7 +106,9 @@ public class OcrConsumer {
         log.info("OCR consumer listening: queue={}", RabbitConfig.OCR_QUEUE);
     }
 
-    private void process(DocumentUploadedMessage job) throws IOException {
+    private CompletableFuture<Void> process(DocumentUploadedMessage job)
+            throws IOException {
+
         Path pdf = downloadService.download(job.objectKey());
 
         try {
@@ -104,10 +126,17 @@ public class OcrConsumer {
             );
 
             log.info(
-                    "OCR job completed: documentId={}, characters={}, resultKey={}",
+                    "OCR result ready for indexing: documentId={}, characters={}",
                     job.documentId(),
-                    text.length(),
-                    resultKey
+                    text.length()
+            );
+
+            return indexJobProducer.send(
+                    new IndexDocumentMessage(
+                            job.documentId(),
+                            job.fileName(),
+                            resultKey
+                    )
             );
 
         } finally {
@@ -118,6 +147,7 @@ public class OcrConsumer {
             }
         }
     }
+
     private void forwardFailure(Consumer.Context context, byte[] body) {
         try {
             failedJobPublisher.publish(

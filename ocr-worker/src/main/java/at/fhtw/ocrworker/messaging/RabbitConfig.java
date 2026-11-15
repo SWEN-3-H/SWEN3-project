@@ -13,12 +13,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(RabbitConfig.class);
-
+    private static final Logger log = LoggerFactory.getLogger(RabbitConfig.class);
     public static final String OCR_QUEUE = "document.ocr";
-
     public static final String OCR_FAILED_QUEUE = "document.ocr.failed";
+    public static final String INDEX_QUEUE = "document.index";
 
     @Bean(destroyMethod = "close")
     public Environment amqpEnvironment(
@@ -50,8 +48,15 @@ public class RabbitConfig {
                     .quorum()
                     .queue()
                     .declare();
-
             log.info("RabbitMQ queue ready: queue={}", OCR_FAILED_QUEUE);
+
+            connection.management()
+                    .queue(INDEX_QUEUE)
+                    .quorum()
+                    .queue()
+                    .declare();
+            log.info("RabbitMQ queue ready: queue={}", INDEX_QUEUE);
+
             return connection;
         } catch (RuntimeException e) {
             connection.close();
@@ -63,6 +68,13 @@ public class RabbitConfig {
     public Publisher failedJobPublisher(Connection connection) {
         return connection.publisherBuilder()
                 .queue(OCR_FAILED_QUEUE)
+                .build();
+    }
+
+    @Bean(destroyMethod = "close")
+    public Publisher indexJobPublisher(Connection connection) {
+        return connection.publisherBuilder()
+                .queue(INDEX_QUEUE)
                 .build();
     }
 }
