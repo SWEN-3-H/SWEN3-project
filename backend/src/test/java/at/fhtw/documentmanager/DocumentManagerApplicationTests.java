@@ -3,6 +3,7 @@ package at.fhtw.documentmanager;
 import at.fhtw.documentmanager.messaging.OcrMessageProducer;
 import at.fhtw.documentmanager.messaging.Recv;
 import at.fhtw.documentmanager.messaging.Send;
+import at.fhtw.documentmanager.search.DocumentIndexRepository;
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Environment;
 import io.minio.MinioClient;
@@ -29,7 +30,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
                 Send.class,
                 Recv.class,
                 OcrMessageProducer.class,
-                MinioClient.class
+                MinioClient.class,
+                DocumentIndexRepository.class
         },
         enforceOverride = true
 )
