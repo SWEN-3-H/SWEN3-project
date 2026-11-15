@@ -3,6 +3,7 @@ package at.fhtw.documentmanager.controller;
 import at.fhtw.documentmanager.dto.DocumentRequestDto;
 import at.fhtw.documentmanager.dto.DocumentResponseDto;
 import at.fhtw.documentmanager.mapper.DocumentMapper;
+import at.fhtw.documentmanager.search.SearchService;
 import at.fhtw.documentmanager.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class DocumentController {
 
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
+    private final SearchService searchService;
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<DocumentResponseDto> upload(@RequestParam("file") MultipartFile file) {
@@ -60,5 +62,12 @@ public class DocumentController {
     @DeleteMapping("/{id}/labels/{labelId}")
     public DocumentResponseDto removeLabel(@PathVariable Long id, @PathVariable Long labelId) {
         return documentMapper.toDto(documentService.removeLabel(id, labelId));
+    }
+
+    @GetMapping("/search")
+    public List<DocumentResponseDto> search(@RequestParam("q") String query) {
+        return searchService.search(query).stream()
+                .map(documentMapper::toDto)
+                .toList();
     }
 }

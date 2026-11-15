@@ -6,6 +6,17 @@
   </a>
 </div>
 
+<div class="search">
+  <mat-form-field>
+    <mat-label>Search</mat-label>
+    <input matInput #q (keyup.enter)="search(q.value)">
+  </mat-form-field>
+  <button mat-flat-button (click)="search(q.value)">
+    <mat-icon>search</mat-icon>
+    Search
+  </button>
+</div>
+
 @if (loading()) {
   <mat-spinner diameter="40" />
 } @else if (error()) {

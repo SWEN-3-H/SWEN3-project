@@ -1,9 +1,11 @@
 package at.fhtw.documentmanager.service;
 
+import at.fhtw.documentmanager.messaging.DocumentUploadedMessage;
 import at.fhtw.documentmanager.messaging.OcrMessageProducer;
 import at.fhtw.documentmanager.model.Document;
 import at.fhtw.documentmanager.repository.DocumentRepository;
 import at.fhtw.documentmanager.repository.LabelRepository;
+import at.fhtw.documentmanager.storage.DocumentStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,9 @@ class DocumentServiceTest {
     @Mock
     private OcrMessageProducer ocrMessageProducer;
 
+    @Mock
+    private DocumentStorageService documentStorageService;
+
     private DocumentService documentService;
 
     @BeforeEach
@@ -39,7 +44,8 @@ class DocumentServiceTest {
         documentService = new DocumentService(
                 documentRepository,
                 labelRepository,
-                ocrMessageProducer
+                ocrMessageProducer,
+                documentStorageService
         );
     }
 
@@ -48,10 +54,32 @@ class DocumentServiceTest {
         MultipartFile file = new MockMultipartFile(
                 "file", "test.pdf", "application/pdf", "content".getBytes());
 
+        when(documentStorageService.store(file)).thenReturn("documents/abc.pdf");
         when(documentRepository.save(any(Document.class))).thenAnswer(i -> i.getArgument(0));
+
         Document result = documentService.upload(file);
 
         assertThat(result.getFilename()).isEqualTo("test.pdf");
+        assertThat(result.getObjectKey()).isEqualTo("documents/abc.pdf");
+        verify(documentStorageService).store(file);
+        verify(ocrMessageProducer).sendDocumentUploaded(any(DocumentUploadedMessage.class));
+    }
+
+    @Test
+    void uploadRemovesStoredPdfWhenDatabaseFails() {
+        MultipartFile file = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+
+        when(documentStorageService.store(file)).thenReturn("documents/abc.pdf");
+        when(documentRepository.save(any(Document.class)))
+                .thenThrow(new RuntimeException("db down"));
+
+        assertThatThrownBy(() -> documentService.upload(file))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("db down");
+
+        verify(documentStorageService).delete("documents/abc.pdf");
+        verifyNoInteractions(ocrMessageProducer);
     }
 
     @Test
@@ -70,7 +98,6 @@ class DocumentServiceTest {
 
         assertThatThrownBy(() -> documentService.findById(1L))
                 .isInstanceOf(ResourceNotFoundException.class);
-
     }
 
     @Test
@@ -79,9 +106,9 @@ class DocumentServiceTest {
         Document documentB = documentWithId(2L, "testB.pdf");
         Document documentC = documentWithId(3L, "testC.pdf");
 
-        when(documentRepository.findAll()).thenReturn(List.of(documentA,documentB,documentC));
+        when(documentRepository.findAll()).thenReturn(List.of(documentA, documentB, documentC));
 
-        assertThat(documentService.findAll()).containsExactly(documentA,documentB,documentC);
+        assertThat(documentService.findAll()).containsExactly(documentA, documentB, documentC);
     }
 
     @Test
@@ -89,7 +116,6 @@ class DocumentServiceTest {
         Document existing = documentWithId(1L, "test.pdf");
 
         when(documentRepository.save(any(Document.class))).thenAnswer(i -> i.getArgument(0));
-
         when(documentRepository.findById(1L)).thenReturn(Optional.of(existing));
 
         Document result = documentService.updateFilename(1L, "new.pdf");
@@ -101,23 +127,26 @@ class DocumentServiceTest {
     @Test
     void deleteDocument() {
         Document document = documentWithId(1L, "test.pdf");
-        when(documentRepository.findById(1L))
-                .thenReturn(Optional.of(document));
+        document.setObjectKey("documents/abc.pdf");
+
+        when(documentRepository.findById(1L)).thenReturn(Optional.of(document));
 
         documentService.delete(1L);
 
+        verify(documentStorageService).delete("documents/abc.pdf");
+        verify(documentStorageService).delete("ocr-results/1.txt");
         verify(documentRepository).delete(document);
     }
 
     @Test
     void deleteDocumentFail() {
-        when(documentRepository.findById(5L))
-                .thenReturn(Optional.empty());
+        when(documentRepository.findById(5L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> documentService.delete(5L))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(documentRepository, never()).delete(any(Document.class));
+        verifyNoInteractions(documentStorageService);
     }
 
     @Test
@@ -128,7 +157,7 @@ class DocumentServiceTest {
         assertThatThrownBy(() -> documentService.upload(file))
                 .isInstanceOf(InvalidDocumentException.class);
 
-        verifyNoInteractions(documentRepository);
+        verifyNoInteractions(documentRepository, documentStorageService, ocrMessageProducer);
     }
 
     @Test
@@ -141,22 +170,18 @@ class DocumentServiceTest {
         assertThatThrownBy(() -> documentService.upload(file))
                 .isInstanceOf(InvalidDocumentException.class);
 
-        verifyNoInteractions(documentRepository);
+        verifyNoInteractions(documentRepository, documentStorageService, ocrMessageProducer);
     }
 
     @Test
     void updateMissingDocumentFails() {
-        when(documentRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        when(documentRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(
-                () -> documentService.updateFilename(99L, "new.pdf")
-        ).isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> documentService.updateFilename(99L, "new.pdf"))
+                .isInstanceOf(ResourceNotFoundException.class);
 
         verify(documentRepository, never()).save(any(Document.class));
     }
-
-
 
     private Document documentWithId(Long id, String filename) {
         Document document = new Document();
